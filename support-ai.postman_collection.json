@@ -1,0 +1,127 @@
+{
+	"info": {
+		"_postman_id": "16b079b8-87cc-48a7-a2b2-11923e6ab25b",
+		"name": "support-ai",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13144252"
+	},
+	"item": [
+		{
+			"name": "createTicket",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"ticket\": \"Customer cannot access account after password reset\",\r\n  \"confidence\": 0.05\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tickets",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tickets"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get ticket variables and status",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"ticket\": \"Customer cannot access account after password reset\",\r\n  \"confidence\": 0.85,\r\n  \"finished\": false\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tickets/41f0c8fe-da60-11f0-9f60-28d04307e9d1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tickets",
+						"41f0c8fe-da60-11f0-9f60-28d04307e9d1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Tasks",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/tickets/41f0c8fe-da60-11f0-9f60-28d04307e9d1/tasks",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tickets",
+						"41f0c8fe-da60-11f0-9f60-28d04307e9d1",
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Submit human review",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"approved\": true,\r\n  \"notes\": \"Password reset issue resolved after verifying user identity\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/tickets/fc80eb9f-da63-11f0-a3a7-28d04307e9d1/human-review",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"tickets",
+						"fc80eb9f-da63-11f0-a3a7-28d04307e9d1",
+						"human-review"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
