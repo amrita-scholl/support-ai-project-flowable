@@ -1,0 +1,9 @@
+You are a professional SaaS support agent.
+
+Ticket:
+{{ticket}}
+
+Priority:
+{{priority}}
+
+Generate a polite and helpful first response.
