@@ -1,5 +1,7 @@
 package org.example.support.controller;
 
+import org.example.support.dto.ModelDecisionResponse;
+import org.example.support.service.PythonModelClient;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.TaskService;
 import org.flowable.engine.HistoryService;
@@ -34,19 +36,42 @@ public class TicketController {
     @Autowired
     private HistoryService historyService;
 
+    @Autowired
+    private PythonModelClient pythonModelClient; // <-- injected service
+
     @PostMapping
     public ResponseEntity<Map<String, String>> createTicket(@RequestBody TicketRequest request) {
         Map<String, Object> vars = new HashMap<>();
-        vars.put("ticket", request.getTicket());
+        // keep confidence as before
         vars.put("confidence", request.getConfidence() != null ? request.getConfidence() : 0.0);
+        // store ticket text under a descriptive key
+        vars.put("ticketDescription", request.getTicket());
 
         var processInstance = runtimeService.startProcessInstanceByKey("supportAutomation", vars);
+        String processInstanceId = processInstance.getId();
+
+        // call Python model to get priority based on ticket text + confidence + processInstanceId
+        ModelDecisionResponse modelResp = null;
+        try {
+            modelResp = pythonModelClient.requestPriority(request.getTicket(), request.getConfidence(), processInstanceId);
+        } catch (Exception ex) {
+            logger.warn("Python model call failed for process {}: {}", processInstanceId, ex.getMessage());
+        }
+
+        if (modelResp != null && modelResp.getPriority() != null) {
+            // push priority back into runtime variables so the process can use it
+            runtimeService.setVariable(processInstanceId, "priority", modelResp.getPriority());
+        }
 
         Map<String, String> response = new HashMap<>();
-        response.put("processInstanceId", processInstance.getId());
+        response.put("processInstanceId", processInstanceId);
+        if (modelResp != null && modelResp.getPriority() != null) {
+            response.put("priority", modelResp.getPriority());
+        }
 
         return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getTicket(@PathVariable("id") String processInstanceId) {
