@@ -7,6 +7,7 @@ A small Spring Boot service using Flowable to automate ticket handling with opti
 2. Spring Boot
 3. Flowable Engine
 4. Maven
+5. openai
 
 ## Files of interest
 1. `src/main/java/org/example/support/controller/TicketController.java` - REST API controller
@@ -76,37 +77,3 @@ A small Spring Boot service using Flowable to automate ticket handling with opti
      1. Missing body: HTTP `400` with `success: false`.
      2. No active human task: HTTP `404` with `success: false`.
      3. Process already finished: HTTP `410` with `success: false`.
-
-## Behavior notes
-1. The BPMN usually routes automatically or to a `userTask` named/defined as `humanReview`. Gateway conditions (for example based on `confidence`) can skip the human task and finish the process.
-2. To force human review, start the process with an override variable: `forceHumanReview = true` (requires BPMN expression change to honor it).
-3. `GET /tickets/{id}` returns runtime variables while active and historic variables after completion.
-
-## Troubleshooting
-1. If `GET /tickets/{id}` shows `finished: true` immediately after creation:
-   1. Verify `confidence` value used when starting the process.
-   2. Call `GET /tickets/{id}/tasks` to confirm active tasks.
-   3. Inspect the BPMN `exclusiveGateway` conditions for immediate paths to the end.
-2. If `POST /tickets/{id}/human-review` returns `404`:
-   1. Confirm taskDefinitionKey or task name in BPMN (`humanReview` / `Human Review`).
-   2. Use `GET /tickets/{id}/tasks` to see active task `id` and `taskDefinitionKey`.
-3. Check application logs for task completion and variable changes.
-
-## Configuration
-1. Datasource and Flowable configuration are typical Spring Boot properties.
-2. Recommended settings in `application.properties` / `application.yml`:
-   - JDBC URL, username, password
-   - `spring.jpa.hibernate.ddl-auto` (if using embedded DB)
-   - Flowable history level if historic variables are required
-
-## Tests
-1. Run unit/integration tests:
-   1. `mvn test`
-
-## Contributing
-1. Create a branch per issue.
-2. Follow existing code style and tests.
-3. Open PR with description and related BPMN changes if needed.
-
-## License
-1. Add project license as appropriate (e.g., `MIT`, `Apache-2.0`).
