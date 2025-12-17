@@ -7,41 +7,77 @@
                http://www.omg.org/spec/BPMN/20100524/BPMN20.xsd"
              targetNamespace="SupportAI">
 
-    <process id="supportAutomation" isExecutable="true">
+    <process id="supportAutomation" name="Support Automation" isExecutable="true">
 
+        <!-- Start -->
         <startEvent id="start"/>
 
+        <!-- AI Classification -->
         <serviceTask id="classifyTicket"
-                     name="Classify Ticket"
+                     name="Classify Ticket (AI)"
                      flowable:delegateExpression="${classifyTicketDelegate}" />
 
-        <exclusiveGateway id="decisionGateway"/>
+        <!-- Human Review Decision -->
+        <exclusiveGateway id="humanReviewGateway" name="Human Review Required?"/>
 
+        <!-- Auto Execution -->
         <serviceTask id="executeAction"
                      name="Execute Ticket Action"
                      flowable:delegateExpression="${ticketActionDelegate}" />
 
-        <userTask id="humanReview" name="Human Review Required"/>
+        <!-- Escalation Routing -->
+        <exclusiveGateway id="escalationGateway" name="Route by Escalation Level"/>
 
+        <!-- L1 / L2 / L3 User Tasks -->
+        <userTask id="l1Review" name="L1 Support Review"/>
+        <userTask id="l2Review" name="L2 Support Review"/>
+        <userTask id="l3Review" name="L3 Support Review"/>
+
+        <!-- End -->
         <endEvent id="end"/>
 
+        <!-- Flows -->
         <sequenceFlow sourceRef="start" targetRef="classifyTicket"/>
-        <sequenceFlow sourceRef="classifyTicket" targetRef="decisionGateway"/>
+        <sequenceFlow sourceRef="classifyTicket" targetRef="humanReviewGateway"/>
 
-        <sequenceFlow sourceRef="decisionGateway" targetRef="humanReview">
+        <!-- Human Review = YES -->
+        <sequenceFlow sourceRef="humanReviewGateway" targetRef="escalationGateway">
             <conditionExpression xsi:type="tFormalExpression">
                 <![CDATA[${requiresHumanReview == true}]]>
             </conditionExpression>
         </sequenceFlow>
 
-        <sequenceFlow sourceRef="decisionGateway" targetRef="executeAction">
+        <!-- Human Review = NO -->
+        <sequenceFlow sourceRef="humanReviewGateway" targetRef="executeAction">
             <conditionExpression xsi:type="tFormalExpression">
                 <![CDATA[${requiresHumanReview == false}]]>
             </conditionExpression>
         </sequenceFlow>
 
+        <!-- Escalation Routing -->
+        <sequenceFlow sourceRef="escalationGateway" targetRef="l1Review">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${escalationLevel == 'L1'}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow sourceRef="escalationGateway" targetRef="l2Review">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${escalationLevel == 'L2'}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow sourceRef="escalationGateway" targetRef="l3Review">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${escalationLevel == 'L3'}]]>
+            </conditionExpression>
+        </sequenceFlow>
+
+        <!-- End Flows -->
         <sequenceFlow sourceRef="executeAction" targetRef="end"/>
-        <sequenceFlow sourceRef="humanReview" targetRef="end"/>
+        <sequenceFlow sourceRef="l1Review" targetRef="end"/>
+        <sequenceFlow sourceRef="l2Review" targetRef="end"/>
+        <sequenceFlow sourceRef="l3Review" targetRef="end"/>
 
     </process>
 </definitions>

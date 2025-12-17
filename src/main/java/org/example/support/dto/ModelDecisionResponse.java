@@ -9,6 +9,16 @@ public class ModelDecisionResponse {
     private String priority;
     private String category;
     private String urgency;
+
+    public double getConfidence() {
+        return confidence;
+    }
+
+    public void setConfidence(double confidence) {
+        this.confidence = confidence;
+    }
+
+    private double confidence;
     private String sentiment;
     private Integer expectedResolutionHours;
     private String recommendedAction;
@@ -79,5 +89,16 @@ public class ModelDecisionResponse {
 
     private Boolean requiresHumanReview;
 
+
+    // 🔥 ADD THIS
+    private String escalationLevel;
+
     // getters & setters
+    public String getEscalationLevel() {
+        return escalationLevel;
+    }
+
+    public void setEscalationLevel(String escalationLevel) {
+        this.escalationLevel = escalationLevel;
+    }
 }

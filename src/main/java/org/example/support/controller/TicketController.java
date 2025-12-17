@@ -2,6 +2,7 @@ package org.example.support.controller;
 
 import org.example.support.dto.ModelDecisionResponse;
 import org.example.support.service.PythonModelClient;
+import org.example.support.service.PythonModelClientImpl;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.TaskService;
 import org.flowable.engine.HistoryService;
@@ -37,22 +38,51 @@ public class TicketController {
     private HistoryService historyService;
 
     @Autowired
-    private PythonModelClient pythonModelClient; // <-- injected service
+    private PythonModelClientImpl pythonModelClientImpl; // <-- injected service
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createTicket(@RequestBody TicketRequest request) {
+    public ResponseEntity<?> createTicket(@RequestBody TicketRequest request) {
 
+        // 1️⃣ Validate required field
+        if (request.getTicket() == null || request.getTicket().isBlank()) {
+            return ResponseEntity.badRequest().body("ticket field is required");
+        }
+
+        // 2️⃣ Start Flowable process
+        Map<String, Object> startVars = new HashMap<>();
+        startVars.put("ticketDescription", request.getTicket()); // guaranteed non-null
+
+        var process = runtimeService.startProcessInstanceByKey("supportAutomation", startVars);
+
+        // 3️⃣ Prepare payload for Python
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("ticket", request.getTicket());
+        payload.put("processInstanceId", process.getId());
+
+        if (request.getConfidence() != null) {
+            payload.put("confidence", request.getConfidence());
+        }
+
+        ModelDecisionResponse response = pythonModelClientImpl.analyzeTicket(payload);
+
+        // 4️⃣ Save Python response into Flowable variables
         Map<String, Object> vars = new HashMap<>();
-        vars.put("ticketDescription", request.getTicket());
-        vars.put("confidence", request.getConfidence());
+        vars.put("predictedCategory", response.getCategory());
+        vars.put("confidence", response.getConfidence());
+        vars.put("priority", response.getPriority());
+        vars.put("urgency", response.getUrgency());
+        vars.put("sentiment", response.getSentiment());
+        vars.put("recommendedAction", response.getRecommendedAction());
+        vars.put("expectedResolutionHours", response.getExpectedResolutionHours());
+        vars.put("requiresHumanReview", response.getRequiresHumanReview());
 
-        var process = runtimeService.startProcessInstanceByKey("supportAutomation", vars);
+        runtimeService.setVariables(process.getId(), vars);
 
-        Map<String, Object> response =
-                runtimeService.getVariables(process.getId());
+        // 5️⃣ Build response
+        Map<String, Object> result = runtimeService.getVariables(process.getId());
+        result.put("processInstanceId", process.getId());
 
-        response.put("processInstanceId", process.getId());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(result);
     }
 
 

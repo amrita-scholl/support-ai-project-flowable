@@ -18,14 +18,14 @@ public class PythonModelClient {
     private String pythonAiUrl;
 
     public ModelDecisionResponse requestPriority(
-            String ticketText,
+            String ticket,
             Double confidence,
             String processInstanceId) {
 
         Map<String, Object> payload = new HashMap<>();
 
-        // ✅ FIX: Python expects "ticketText"
-        payload.put("ticketText", ticketText);
+        // ✅ FIX: Python expects "ticket"
+        payload.put("ticket", ticket);
 
         payload.put("confidence", confidence);
         payload.put("processInstanceId", processInstanceId);
