@@ -1,19 +1,83 @@
 package org.example.support.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ModelDecisionResponse {
+
+    private String processInstanceId;
     private String priority;
-    private Boolean shouldCallAgain;
-    private String externalProcessId; // optional if Python returns an id for future calls
+    private String category;
+    private String urgency;
+    private String sentiment;
+    private Integer expectedResolutionHours;
+    private String recommendedAction;
 
-    public ModelDecisionResponse() {}
+    public Boolean getRequiresHumanReview() {
+        return requiresHumanReview;
+    }
 
-    public String getPriority() { return priority; }
-    public void setPriority(String priority) { this.priority = priority; }
+    public void setRequiresHumanReview(Boolean requiresHumanReview) {
+        this.requiresHumanReview = requiresHumanReview;
+    }
 
-    public Boolean getShouldCallAgain() { return shouldCallAgain; }
-    public void setShouldCallAgain(Boolean shouldCallAgain) { this.shouldCallAgain = shouldCallAgain; }
+    public String getRecommendedAction() {
+        return recommendedAction;
+    }
 
-    public String getExternalProcessId() { return externalProcessId; }
-    public void setExternalProcessId(String externalProcessId) { this.externalProcessId = externalProcessId; }
+    public void setRecommendedAction(String recommendedAction) {
+        this.recommendedAction = recommendedAction;
+    }
+
+    public Integer getExpectedResolutionHours() {
+        return expectedResolutionHours;
+    }
+
+    public void setExpectedResolutionHours(Integer expectedResolutionHours) {
+        this.expectedResolutionHours = expectedResolutionHours;
+    }
+
+    public String getSentiment() {
+        return sentiment;
+    }
+
+    public void setSentiment(String sentiment) {
+        this.sentiment = sentiment;
+    }
+
+    public String getUrgency() {
+        return urgency;
+    }
+
+    public void setUrgency(String urgency) {
+        this.urgency = urgency;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public String getProcessInstanceId() {
+        return processInstanceId;
+    }
+
+    public void setProcessInstanceId(String processInstanceId) {
+        this.processInstanceId = processInstanceId;
+    }
+
+    private Boolean requiresHumanReview;
+
+    // getters & setters
 }
-

@@ -40,37 +40,21 @@ public class TicketController {
     private PythonModelClient pythonModelClient; // <-- injected service
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> createTicket(@RequestBody TicketRequest request) {
+    public ResponseEntity<Map<String, Object>> createTicket(@RequestBody TicketRequest request) {
+
         Map<String, Object> vars = new HashMap<>();
-        // keep confidence as before
-        vars.put("confidence", request.getConfidence() != null ? request.getConfidence() : 0.0);
-        // store ticket text under a descriptive key
         vars.put("ticketDescription", request.getTicket());
+        vars.put("confidence", request.getConfidence());
 
-        var processInstance = runtimeService.startProcessInstanceByKey("supportAutomation", vars);
-        String processInstanceId = processInstance.getId();
+        var process = runtimeService.startProcessInstanceByKey("supportAutomation", vars);
 
-        // call Python model to get priority based on ticket text + confidence + processInstanceId
-        ModelDecisionResponse modelResp = null;
-        try {
-            modelResp = pythonModelClient.requestPriority(request.getTicket(), request.getConfidence(), processInstanceId);
-        } catch (Exception ex) {
-            logger.warn("Python model call failed for process {}: {}", processInstanceId, ex.getMessage());
-        }
+        Map<String, Object> response =
+                runtimeService.getVariables(process.getId());
 
-        if (modelResp != null && modelResp.getPriority() != null) {
-            // push priority back into runtime variables so the process can use it
-            runtimeService.setVariable(processInstanceId, "priority", modelResp.getPriority());
-        }
-
-        Map<String, String> response = new HashMap<>();
-        response.put("processInstanceId", processInstanceId);
-        if (modelResp != null && modelResp.getPriority() != null) {
-            response.put("priority", modelResp.getPriority());
-        }
-
+        response.put("processInstanceId", process.getId());
         return ResponseEntity.ok(response);
     }
+
 
 
     @GetMapping("/{id}")

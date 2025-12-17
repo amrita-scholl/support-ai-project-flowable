@@ -7,34 +7,40 @@
                http://www.omg.org/spec/BPMN/20100524/BPMN20.xsd"
              targetNamespace="SupportAI">
 
-    <process id="supportAutomation" name="Support Automation" isExecutable="true">
+    <process id="supportAutomation" isExecutable="true">
 
         <startEvent id="start"/>
 
-        <serviceTask id="classifyTicket" name="Classify Ticket" flowable:class="org.example.support.workflow.delegate.ClassifyTicketDelegate" />
+        <serviceTask id="classifyTicket"
+                     name="Classify Ticket"
+                     flowable:delegateExpression="${classifyTicketDelegate}" />
 
-        <exclusiveGateway id="priorityGateway"/>
+        <exclusiveGateway id="decisionGateway"/>
 
-        <serviceTask id="generateReply"
-                     name="Generate AI Reply"
-                     flowable:class="org.example.support.workflow.delegate.GenerateReplyDelegate"/>
+        <serviceTask id="executeAction"
+                     name="Execute Ticket Action"
+                     flowable:delegateExpression="${ticketActionDelegate}" />
 
         <userTask id="humanReview" name="Human Review Required"/>
 
         <endEvent id="end"/>
 
         <sequenceFlow sourceRef="start" targetRef="classifyTicket"/>
-        <sequenceFlow sourceRef="classifyTicket" targetRef="priorityGateway"/>
+        <sequenceFlow sourceRef="classifyTicket" targetRef="decisionGateway"/>
 
-        <sequenceFlow sourceRef="priorityGateway" targetRef="generateReply">
-        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${confidence >= 0.8}]]></conditionExpression>
+        <sequenceFlow sourceRef="decisionGateway" targetRef="humanReview">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${requiresHumanReview == true}]]>
+            </conditionExpression>
         </sequenceFlow>
 
-        <sequenceFlow sourceRef="priorityGateway" targetRef="humanReview">
-            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${confidence < 0.8}]]></conditionExpression>
+        <sequenceFlow sourceRef="decisionGateway" targetRef="executeAction">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[${requiresHumanReview == false}]]>
+            </conditionExpression>
         </sequenceFlow>
 
-        <sequenceFlow sourceRef="generateReply" targetRef="end"/>
+        <sequenceFlow sourceRef="executeAction" targetRef="end"/>
         <sequenceFlow sourceRef="humanReview" targetRef="end"/>
 
     </process>

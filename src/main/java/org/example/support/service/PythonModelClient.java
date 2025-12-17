@@ -2,9 +2,7 @@ package org.example.support.service;
 
 import org.example.support.dto.ModelDecisionResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -14,28 +12,37 @@ import java.util.Map;
 @Service
 public class PythonModelClient {
 
-    private final RestTemplate restTemplate;
-    private final String modelApiUrl;
+    private final RestTemplate restTemplate = new RestTemplate();
 
-    public PythonModelClient(RestTemplate restTemplate,
-                             @Value("${model.api.url}") String modelApiUrl) {
-        this.restTemplate = restTemplate;
-        this.modelApiUrl = modelApiUrl;
-    }
+    @Value("${python.ai.url:http://localhost:5000/prioritize}")
+    private String pythonAiUrl;
 
-    public ModelDecisionResponse requestPriority(String ticketText, Double confidence, String processInstanceId) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+    public ModelDecisionResponse requestPriority(
+            String ticketText,
+            Double confidence,
+            String processInstanceId) {
 
         Map<String, Object> payload = new HashMap<>();
-        payload.put("ticket", ticketText);
+
+        // ✅ FIX: Python expects "ticketText"
+        payload.put("ticketText", ticketText);
+
         payload.put("confidence", confidence);
         payload.put("processInstanceId", processInstanceId);
 
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // POST to configured Python endpoint (e.g. POST {modelApiUrl}/prioritize)
-        return restTemplate.postForObject(modelApiUrl + "/prioritize", request, ModelDecisionResponse.class);
+        HttpEntity<Map<String, Object>> request =
+                new HttpEntity<>(payload, headers);
+
+        ResponseEntity<ModelDecisionResponse> response =
+                restTemplate.postForEntity(
+                        pythonAiUrl,
+                        request,
+                        ModelDecisionResponse.class
+                );
+
+        return response.getBody();
     }
 }
-
